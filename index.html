@@ -737,47 +737,68 @@ footer {
 ══════════════════════════════════ -->
 <section class="section" id="s4">
   <div class="sec-meta"><span class="sec-num">04</span> RASTERIZÁCIA — ŽIVÁ UKÁŽKA &nbsp;·&nbsp; 15 min</div>
-  <h2 class="sec-title">Main.java<br><span class="t-rast">— live demo</span></h2>
+  <h2 class="sec-title">RASTERIZÁCIA<br><span class="t-rast">— live demo</span></h2>
 
-  <p>Spustíme <code style="background:var(--card);padding:2px 8px;font-family:var(--mono);font-size:13px;">Main.java</code> a pozrieme sa na scénu: guľa, podlaha, zrkadlo. Všimneme si <strong>tri kľúčové veci</strong>.</p>
+  <p>Spustíme <code style="background:var(--card);padding:2px 8px;font-family:var(--mono);font-size:13px;"> RestMiror.java </code></p>
 
   <div class="demo-wrap">
     <div>
-      <div class="demo-screen">
-        <div class="demo-title t-rast">RASTERIZATION</div>
-        <div class="rast-bg">
-          <div class="rast-ell"></div>
-          <div class="rast-sphere"></div>
-          <div class="rast-mirror">NO<br>REFLECT<br><span style="color:rgba(255,112,67,0.6)">HACK</span></div>
-        </div>
-        <div class="demo-badge" style="color:var(--rast)">HACK</div>
-      </div>
       <ul class="blist rast" style="margin-top:14px;">
         <li><strong>Tieň</strong> — nakreslená elipsa, nie skutočný tieň</li>
         <li><strong>Zrkadlo bez stencilu</strong> — sivý obdĺžnik, nič neodráža</li>
-        <li><strong>Zrkadlo so stencilom</strong> — vyzerá ako odraz, ale je to trik</li>
-      </ul>
-    </div>
-    <div>
-      <div class="demo-screen">
-        <div class="demo-title t-ray">RAY TRACING</div>
-        <div class="rt-bg">
-          <div class="rt-shadow"></div>
-          <div class="rt-sphere"></div>
-          <div class="rt-mirror">
-            <div class="rt-mirror-sphere"></div>
-          </div>
-        </div>
-        <div class="demo-badge" style="color:var(--ray)">REAL</div>
-      </div>
-      <ul class="blist ray" style="margin-top:14px;">
-        <li><strong>Tieň</strong> — fyzikálne správny, mäkký</li>
-        <li><strong>Zrkadlo</strong> — skutočný odraz gule</li>
-        <li><strong>Osvetlenie</strong> — vypočítané per-ray</li>
       </ul>
     </div>
   </div>
+    <p>Spustíme <code style="background:var(--card);padding:2px 8px;font-family:var(--mono);font-size:13px;">RestMiror.java </code></p>
 
+
+  <h3><span class="icon">🔍</span> Ako funguje stencil buffer — krok za krokom</h3>
+
+<div style="display:flex; flex-direction:column; gap:0; margin:24px 0;">
+
+  <!-- Krok 1 -->
+  <div style="display:flex; gap:24px; padding:20px 0; border-bottom:1px solid var(--border);">
+    <div style="font-family:var(--mono); font-size:11px; color:var(--ray); min-width:60px; padding-top:2px; letter-spacing:1px;">01</div>
+    <div>
+      <strong style="color:var(--text); display:block; margin-bottom:6px;">Nakresli zrkadlo do stencil buffera</strong>
+      <p style="margin:0;">GPU nakreslí obdĺžnik zrkadla <em>nie na obrazovku</em> — iba do špeciálnej pamäte. Vznikne maska: kde je zrkadlo = <span style="font-family:var(--mono);color:var(--rast);">1</span>, zvyšok = <span style="font-family:var(--mono);color:var(--text-dim);">0</span>.</p>
+    </div>
+  </div>
+
+  <!-- Krok 2 -->
+  <div style="display:flex; gap:24px; padding:20px 0; border-bottom:1px solid var(--border);">
+    <div style="font-family:var(--mono); font-size:11px; color:var(--ray); min-width:60px; padding-top:2px; letter-spacing:1px;">02</div>
+    <div>
+      <strong style="color:var(--text); display:block; margin-bottom:6px;">Kresli scénu prevrátenú — len tam kde je maska</strong>
+      <p style="margin:0;">GPU vykreslí celú scénu s <span style="font-family:var(--mono);color:var(--rast);">glScalef(1, -1, 1)</span> — jednoduché prevratenie na osi Y. Ale iba na pixeloch kde stencil = <span style="font-family:var(--mono);color:var(--rast);">1</span>. Zvyšok sa zahodí.</p>
+    </div>
+  </div>
+
+  <!-- Krok 3 -->
+  <div style="display:flex; gap:24px; padding:20px 0; border-bottom:1px solid var(--border);">
+    <div style="font-family:var(--mono); font-size:11px; color:var(--ray); min-width:60px; padding-top:2px; letter-spacing:1px;">03</div>
+    <div>
+      <strong style="color:var(--text); display:block; margin-bottom:6px;">Nakresli zrkadlo normálne — zakryje švy</strong>
+      <p style="margin:0;">Navrch sa nakreslí samotný obdĺžnik zrkadla s priesvitnosťou. Zakryje okraje prevratenej kópie a vytvorí ilúziu hĺbky.</p>
+    </div>
+  </div>
+
+  <!-- Krok 4 -->
+  <div style="display:flex; gap:24px; padding:20px 0;">
+    <div style="font-family:var(--mono); font-size:11px; color:var(--ray); min-width:60px; padding-top:2px; letter-spacing:1px;">04</div>
+    <div>
+      <strong style="color:var(--text); display:block; margin-bottom:6px;">Výsledok — vyzerá ako odraz, ale nie je</strong>
+      <p style="margin:0 0 10px;">Žiadna fyzika svetla, žiadny skutočný odraz. Iba prevratená kópia scény schovaná za maskou.</p>
+      <span class="chip rast">HACK</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="info-box rast" style="margin-top:8px;">
+  <div class="ib-label">PREČO JE TO HACK</div>
+  Stencil buffer bol navrhnutý na orezávanie geometrie — nie na odrazy. Funguje len pre rovné zrkadlá, len pre statickú scénu, a úplne zlyhá pri zložitých povrchoch.
+</div>
   <div class="big-quote">
     „GPU kreslí len to, čo vidí kamera — o fyzike svetla nevie nič."
   </div>
@@ -906,7 +927,7 @@ footer {
   <div class="sec-meta"><span class="sec-num">06</span> RAY TRACING — ŽIVÁ UKÁŽKA &nbsp;·&nbsp; 15 min</div>
   <h2 class="sec-title">RayTracer.java<br><span class="t-ray">— live demo</span></h2>
 
-  <p>Spustíme <code style="background:var(--card);padding:2px 8px;font-family:var(--mono);font-size:13px;">RayTracer.java</code>. Kým sa renderuje (<strong>trvá to 1–2 minúty</strong>) — vysvetlíme čo sa deje.</p>
+  <p>Spustíme <code style="background:var(--card);padding:2px 8px;font-family:var(--mono);font-size:13px;">RayTracer.java</code>.</p>
 
   <div class="info-box ray" style="margin-bottom:24px;">
     <span class="ib-label">// čo sa deje</span>
@@ -968,9 +989,9 @@ footer {
 ══════════════════════════════════ -->
 <section class="section" id="s7">
   <div class="sec-meta"><span class="sec-num">07</span> POROVNANIE NAŽIVO &nbsp;·&nbsp; 10 min</div>
-  <h2 class="sec-title">Dve okná<br>vedľa seba</h2>
+  <h2 class="sec-title">POROVNANIE </h2>
 
-  <p>Dáme obe okná vedľa seba a pozrieme sa na <strong>tri kľúčové rozdiely</strong>.</p>
+  <p> Pozrieme sa na <strong> kľúčové rozdiely</strong>.</p>
 
   <table class="cmp-table">
     <thead>
